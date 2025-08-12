@@ -70,6 +70,27 @@ namespace ZerGo0.TeamSpeak3Integration.Helpers
             }
         }
 
+        public static string HashPassword(string password)
+        {
+            lock (ro_TS3_CLIENT_LOCK_OBJ)
+            {
+                if (!TS3_CLIENT.IsConnected) return null;
+
+                TS3_CLIENT.WriteLine($"hashpassword password={password}");
+                var response = TS3_CLIENT.ReadAsync().Result;
+
+                if (response.Contains("msg=ok"))
+                {
+                    string hash = response.Split(new[] { "passwordhash=" }, StringSplitOptions.None)[1]
+                                .Split('\n')[0]
+                                .Trim();
+                    return hash;
+                }
+
+                return null;
+            }
+        }
+
         public static int GetClientId()
         {
             lock (ro_TS3_CLIENT_LOCK_OBJ)
@@ -149,7 +170,7 @@ namespace ZerGo0.TeamSpeak3Integration.Helpers
 
         #region Channel Stuff
 
-        public static bool ChannelSwitch(string channelName, int clientId)
+        public static bool ChannelSwitch(string channelName, int clientId, string password)
         {
             lock (ro_TS3_CLIENT_LOCK_OBJ)
             {
@@ -177,7 +198,15 @@ namespace ZerGo0.TeamSpeak3Integration.Helpers
 
                 if (string.IsNullOrWhiteSpace(channelId)) return false;
 
-                TS3_CLIENT.WriteLine($"clientmove cid={channelId} clid={clientId}");
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    TS3_CLIENT.WriteLine($"clientmove cid={channelId} clid={clientId}");
+                }
+                else
+                {
+                    var passwordHash = HashPassword(password);
+                    TS3_CLIENT.WriteLine($"clientmove cid={channelId} password={passwordHash} clid={clientId}");
+                }
                 var channelSwitchResponse = TS3_CLIENT.ReadAsync().Result;
 
                 return channelSwitchResponse.Contains("msg=ok");

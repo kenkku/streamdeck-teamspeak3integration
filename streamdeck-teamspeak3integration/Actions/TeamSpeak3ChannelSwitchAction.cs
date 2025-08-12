@@ -85,12 +85,17 @@ namespace ZerGo0.TeamSpeak3Integration.Actions
             [JsonProperty(PropertyName = "channelName")]
             public string ChannelName { get; set; }
 
+
+            [JsonProperty(PropertyName = "channelPassword")]
+            public string ChannelPassword { get; set; }
+
             public static PluginSettings CreateDefaultSettings()
             {
                 var instance = new PluginSettings
                 {
                     ApiKey = string.Empty,
-                    ChannelName = string.Empty
+                    ChannelName = string.Empty,
+                    ChannelPassword = string.Empty
                 };
 
                 return instance;
@@ -123,7 +128,7 @@ namespace ZerGo0.TeamSpeak3Integration.Actions
                     return;
                 }
 
-                TeamSpeak3Telnet.ChannelSwitch(_settings.ChannelName, clientId);
+                TeamSpeak3Telnet.ChannelSwitch(_settings.ChannelName, clientId, _settings.ChannelPassword);
             }
             catch (Exception)
             {
